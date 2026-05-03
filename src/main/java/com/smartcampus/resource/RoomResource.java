@@ -1,6 +1,7 @@
 package com.smartcampus.resource;
 
 import com.smartcampus.data.DataStore;
+import com.smartcampus.exception.ErrorResponse;
 import com.smartcampus.exception.RoomNotEmptyException;
 import com.smartcampus.model.Room;
 
@@ -37,10 +38,28 @@ public class RoomResource {
         Room room = DataStore.getRooms().get(roomId);
         if (room == null) {
             return Response.status(Response.Status.NOT_FOUND)
-                    .entity("{\"status\":404,\"error\":\"Not Found\",\"message\":\"Room not found: " + roomId + "\",\"timestamp\":" + System.currentTimeMillis() + "}")
+                    .type(MediaType.APPLICATION_JSON)
+                    .entity(new ErrorResponse(404, "Not Found", "Room not found: " + roomId))
                     .build();
         }
         return Response.ok(room).build();
+    }
+
+    @PUT
+    @Path("/{roomId}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response updateRoom(@PathParam("roomId") String roomId, Room updated) {
+        Room existing = DataStore.getRooms().get(roomId);
+        if (existing == null) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .type(MediaType.APPLICATION_JSON)
+                    .entity(new ErrorResponse(404, "Not Found", "Room not found: " + roomId))
+                    .build();
+        }
+        if (updated.getName() != null) existing.setName(updated.getName());
+        if (updated.getCapacity() > 0) existing.setCapacity(updated.getCapacity());
+        return Response.ok(existing).build();
     }
 
     @DELETE
@@ -50,7 +69,8 @@ public class RoomResource {
         Room room = DataStore.getRooms().get(roomId);
         if (room == null) {
             return Response.status(Response.Status.NOT_FOUND)
-                    .entity("{\"status\":404,\"error\":\"Not Found\",\"message\":\"Room not found: " + roomId + "\",\"timestamp\":" + System.currentTimeMillis() + "}")
+                    .type(MediaType.APPLICATION_JSON)
+                    .entity(new ErrorResponse(404, "Not Found", "Room not found: " + roomId))
                     .build();
         }
         if (!room.getSensorIds().isEmpty()) {
